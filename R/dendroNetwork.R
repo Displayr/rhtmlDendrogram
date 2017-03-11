@@ -56,8 +56,8 @@
 #'
 dendroNetwork <- function(
     hc,
-    height = 500,
-    width = 800,
+    height = NULL,
+    width = NULL,
     fontSize = 10,
     fontFamily = "sans-serif",
     linkColour = "#ccc",
@@ -85,9 +85,9 @@ dendroNetwork <- function(
     root <- as.dendroNetwork(hc, textColour, textOpacity)
 
     if (treeOrientation == "vertical")
-        margins_def = list(top = 40, right = 40, bottom = 150, left = 40)
+        margins_def = list(top = 10, right = 40, bottom = 150, left = 10)
     else
-        margins_def = list(top = 40, right = 150, bottom = 40, left = 40)
+        margins_def = list(top = 10, right = 150, bottom = 10, left = 10)
 
     if (length(margins) == 1L && is.numeric(margins)) {
         margins = as.list(setNames(rep(margins, 4),
