@@ -5,17 +5,21 @@ HTMLWidgets.widget({
 
   initialize: function(el, width, height) {
 
-    d3.select(el).append("svg")
-      .attr("width", width)
-      .attr("height", height)
-      .append("g");
-
-    return d3.cluster();
+    return {
+      lastValue: null,
+      width: width,
+      height: height
+    };
 
   },
 
-  resize: function(el, width, height, tree) {
-
+  resize: function(el, width, height, instance) {
+    instance.width = width;
+    instance.height = height;
+    if (instance.lastValue) {
+      this.doRenderValue(el, instance.lastValue, instance);
+    }
+    /*
     var s = d3.select(el).selectAll("svg")
       .attr("width", width)
       .attr("height", height);
@@ -38,10 +42,25 @@ HTMLWidgets.widget({
 
     var svg = d3.select(el).selectAll("svg").select("g")
       .attr("transform", "translate(" + left + "," + top + ")");
-
+    */
   },
 
-  renderValue: function(el, x, tree) {
+  renderValue: function(el, x, instance) {
+    this.doRenderValue(el, x, instance);
+  },
+
+  doRenderValue: function(el, x, instance) {
+
+    el.innerHTML = "";
+
+    d3.select(el).append("svg")
+      .attr("width", instance.width)
+      .attr("height", instance.height)
+      .append("g");
+
+    instance.lastValue = x;
+
+    var tree = d3.cluster();
 
     var s = d3.select(el).selectAll("svg")
       .attr("margins", x.options.margins)
@@ -181,14 +200,16 @@ HTMLWidgets.widget({
         .attr("text-anchor", "start");
     }
 
+    var _duration = 350;
+
     // mouseover event handler
     function mouseover() {
       d3.select(this).select("circle").transition()
-        .duration(750)
+        .duration(_duration)
         .attr("r", 9);
 
       d3.select(this).select("text").transition()
-        .duration(750)
+        .duration(_duration)
         .style("stroke-width", ".5px")
         .style("font-size", 25 + "px")
         .style("font-family", x.options.fontFamily)
@@ -198,11 +219,11 @@ HTMLWidgets.widget({
     // mouseout event handler
     function mouseout() {
       d3.select(this).select("circle").transition()
-        .duration(750)
+        .duration(_duration)
         .attr("r", 4.5);
 
       d3.select(this).select("text").transition()
-        .duration(750)
+        .duration(_duration)
         .style("font-size", x.options.fontSize + "px")
         .style("font-family", x.options.fontFamily)
         .style("opacity", x.options.opacity);
