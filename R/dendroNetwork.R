@@ -4,6 +4,7 @@
 #' @param height height for the network graph's frame area in pixels
 #' @param width numeric width for the network graph's frame area in pixels
 #' @param fontSize numeric font size in pixels for the node text labels.
+#' @param fontFamily character string specitying font family for the labels (default 'sans-serif').
 #' @param linkColour character string specifying the colour you want the link
 #' lines to be. Multiple formats supported (e.g. hexadecimal).
 #' @param nodeColour character string specifying the colour you want the node

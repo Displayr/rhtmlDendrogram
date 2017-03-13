@@ -9,11 +9,12 @@ Mike Bostock: \url{http://bl.ocks.org/mbostock/4063570}.
 Fabio Nelli: \url{http://www.meccanismocomplesso.org/en/dendrogramma-d3-parte1/}
 }
 \usage{
-dendroNetwork(hc, height = 500, width = 800, fontSize = 10,
-  linkColour = "#ccc", nodeColour = "#fff", nodeStroke = "steelblue",
-  textColour = "#111", textOpacity = 0.9, textRotate = NULL,
-  opacity = 0.9, margins = NULL, linkType = c("elbow", "diagonal"),
-  treeOrientation = c("horizontal", "vertical"), zoom = FALSE)
+dendroNetwork(hc, height = NULL, width = NULL, fontSize = 10,
+  fontFamily = "sans-serif", linkColour = "#ccc", nodeColour = "#fff",
+  nodeStroke = "steelblue", textColour = "#111", textOpacity = 0.9,
+  textRotate = NULL, opacity = 0.9, margins = NULL,
+  linkType = c("elbow", "diagonal"), treeOrientation = c("horizontal",
+  "vertical"), zoom = FALSE)
 }
 \arguments{
 \item{hc}{a hierarchical (\code{hclust}) cluster object.}
@@ -23,6 +24,8 @@ dendroNetwork(hc, height = 500, width = 800, fontSize = 10,
 \item{width}{numeric width for the network graph's frame area in pixels}
 
 \item{fontSize}{numeric font size in pixels for the node text labels.}
+
+\item{fontFamily}{character string specitying font family for the labels (default 'sans-serif').}
 
 \item{linkColour}{character string specifying the colour you want the link
 lines to be. Multiple formats supported (e.g. hexadecimal).}
