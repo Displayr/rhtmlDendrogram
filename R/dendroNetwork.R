@@ -121,11 +121,11 @@ dendroNetwork <- function(
 
     # create widget
     htmlwidgets::createWidget(
-        name = "dendroNetwork",
+        name = "rhtmlDendrogram",
         x = list(root = root, options = options),
         width = width,
         height = height,
-        sizingPolicy = htmlwidgets::sizingPolicy(padding = 10, browser.fill = TRUE),
+        sizingPolicy = htmlwidgets::sizingPolicy(padding = 5, browser.fill = TRUE),
         package = "rhtmlDendrogram")
 }
 

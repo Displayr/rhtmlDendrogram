@@ -1,0 +1,6 @@
+{
+  "widgetClassFile": "theSrc/scripts/lib/dendroNetwork/dendroNetwork.js",
+  "widgetEntryPoint": "theSrc/scripts/rhtmlDendrogram.js",
+  "widgetName": "rhtmlDendrogram",
+  "rFunction": "rhtmlDendrogram::dendroNetwork"
+}

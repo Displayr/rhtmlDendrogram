@@ -1,75 +1,25 @@
-HTMLWidgets.widget({
+function DendroNetwork() {
+  var data,
+      options,
+      viewerWidth,
+      viewerHeight;
 
-  name: "dendroNetwork",
-  type: "output",
+  function chart(selection) {
 
-  initialize: function(el, width, height) {
-
-    return {
-      lastValue: null,
-      width: width,
-      height: height
-    };
-
-  },
-
-  resize: function(el, width, height, instance) {
-    instance.width = width;
-    instance.height = height;
-    if (instance.lastValue) {
-      this.doRenderValue(el, instance.lastValue, instance);
-    }
-    /*
-    var s = d3.select(el).selectAll("svg")
-      .attr("width", width)
-      .attr("height", height);
-
-    var margins = s.attr("margins");
-
-    var top = parseInt(margins.top),
-      right = parseInt(margins.right),
-      bottom = parseInt(margins.bottom),
-      left = parseInt(margins.left);
-
-    height = height - top - bottom;
-    width = width - right - left;
-
-    if (s.attr("treeOrientation") == "horizontal") {
-      tree.size([height, width]);
-    } else {
-      tree.size([width, height]);
-    }
-
-    var svg = d3.select(el).selectAll("svg").select("g")
-      .attr("transform", "translate(" + left + "," + top + ")");
-    */
-  },
-
-  renderValue: function(el, x, instance) {
-    this.doRenderValue(el, x, instance);
-  },
-
-  doRenderValue: function(el, x, instance) {
-
-    el.innerHTML = "";
-
-    d3.select(el).append("svg")
-      .attr("width", instance.width)
-      .attr("height", instance.height)
-      .append("g");
-
-    instance.lastValue = x;
+    var svg = selection.append("svg")
+      .attr("width", viewerWidth)
+      .attr("height", viewerHeight);
 
     var tree = d3.cluster();
 
-    var s = d3.select(el).selectAll("svg")
-      .attr("margins", x.options.margins)
-      .attr("treeOrientation", x.options.treeOrientation);
+    var s = selection.selectAll("svg")
+      .attr("margins", options.margins)
+      .attr("treeOrientation", options.treeOrientation);
 
-    var top = parseInt(x.options.margins.top),
-      right = parseInt(x.options.margins.right),
-      bottom = parseInt(x.options.margins.bottom),
-      left = parseInt(x.options.margins.left);
+    var top = parseInt(options.margins.top),
+      right = parseInt(options.margins.right),
+      bottom = parseInt(options.margins.bottom),
+      left = parseInt(options.margins.left);
 
     var height = parseInt(s.attr("height")) - top - bottom,
       width = parseInt(s.attr("width")) - right - left;
@@ -80,9 +30,8 @@ HTMLWidgets.widget({
       tree.size([width, height]);
     }
 
-    var zoom = d3.zoom();
+    var zoom = d3.zoom().scaleExtent([0.5, 3]);
 
-    var svg = d3.select(el).select("svg");
     svg.selectAll("*").remove();
 
     svg = svg
@@ -90,13 +39,13 @@ HTMLWidgets.widget({
       .append("g")
       .attr("transform", "translate(" + left + "," + top + ")");
 
-    if (x.options.zoom) {
+    if (options.zoom) {
        zoom.on("zoom", function() {
-         d3.select(el).select(".zoom-layer")
+        selection.select(".zoom-layer")
           .attr("transform", d3.event.transform);
        });
 
-       d3.select(el).select("svg")
+      selection.select("svg")
          .attr("pointer-events", "all")
          .call(zoom);
 
@@ -104,7 +53,7 @@ HTMLWidgets.widget({
        zoom.on("zoom", null);
      }
 
-    var root = d3.hierarchy(x.root);
+    var root = d3.hierarchy(data);
     tree(root);
 
     var ymax = d3.max(root.descendants(), function(d) { return d.data.y; });
@@ -127,7 +76,7 @@ HTMLWidgets.widget({
       .style("opacity", "0.55")
       .style("stroke-width", "1.5px");
 
-    if (x.options.linkType == "elbow") {
+    if (options.linkType == "elbow") {
       if (s.attr("treeOrientation") == "horizontal") {
         link.attr("d", function(d, i) {
           return "M" + fx(d.source.data.y) + "," + d.source.x
@@ -174,16 +123,16 @@ HTMLWidgets.widget({
     // node circles
     node.append("circle")
       .attr("r", 4.5)
-      .style("fill", x.options.nodeColour)
-      .style("opacity", x.options.opacity)
-      .style("stroke", x.options.nodeStroke)
+      .style("fill", options.nodeColour)
+      .style("opacity", options.opacity)
+      .style("stroke", options.nodeStroke)
       .style("stroke-width", "1.5px");
 
     // node text
     node.append("text")
-      .attr("transform", "rotate(" + x.options.textRotate + ")")
-      .style("font-size", x.options.fontSize + "px")
-      .style("font-family", x.options.fontFamily)
+      .attr("transform", "rotate(" + options.textRotate + ")")
+      .style("font-size", options.fontSize + "px")
+      .style("font-family", options.fontFamily)
       .style("opacity", function(d) { return d.data.textOpacity; })
       .style("fill", function(d) { return d.data.textColour; })
       .text(function(d) { return d.data.name; });
@@ -212,7 +161,7 @@ HTMLWidgets.widget({
         .duration(_duration)
         .style("stroke-width", ".5px")
         .style("font-size", 25 + "px")
-        .style("font-family", x.options.fontFamily)
+        .style("font-family", options.fontFamily)
         .style("opacity", 1);
     }
 
@@ -224,10 +173,36 @@ HTMLWidgets.widget({
 
       d3.select(this).select("text").transition()
         .duration(_duration)
-        .style("font-size", x.options.fontSize + "px")
-        .style("font-family", x.options.fontFamily)
-        .style("opacity", x.options.opacity);
+        .style("font-size", options.fontSize + "px")
+        .style("font-family", options.fontFamily)
+        .style("opacity", options.opacity);
     }
+  }
 
-  },
-});
+  chart.data = function(v) {
+    if (!arguments.length) return data;
+    data = v;
+    return chart;
+  };
+
+  chart.settings = function(v) {
+      if (!arguments.length) return options;
+      options = v;
+      return chart;
+  };
+
+  chart.width = function(v) {
+    if (!arguments.length) return viewerWidth;
+    viewerWidth = v;
+    return chart;
+  };
+
+  // height getter/setter
+  chart.height = function(v) {
+    if (!arguments.length) return viewerHeight;
+    viewerHeight = v;
+    return chart;
+  };
+
+  return chart;
+}
