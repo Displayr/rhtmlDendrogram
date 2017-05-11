@@ -50,7 +50,11 @@ gulp.task('build', function(done) {
 
 // Live reload is disabled by default as the author of this package saves changes frequently,
 // and therefore prefers manual reload. 
-gulp.task('serve', ['build', 'connect'], function () {
+gulp.task('serve', ['build', 'connect', 'watch'], function () {
+  opn('http://localhost:9000');
+});
+
+gulp.task('serve_s', ['build', 'connect_s'], function () {
   opn('http://localhost:9000');
 });
 

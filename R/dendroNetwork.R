@@ -59,7 +59,7 @@ dendroNetwork <- function(
     hc,
     height = NULL,
     width = NULL,
-    fontSize = 10,
+    fontSize = 11,
     fontFamily = "sans-serif",
     linkColour = "#ccc",
     nodeColour = "#fff",
@@ -71,6 +71,7 @@ dendroNetwork <- function(
     margins = NULL,
     linkType = c("elbow", "diagonal"),
     treeOrientation = c("horizontal", "vertical"),
+    tooltips = NULL,
     zoom = FALSE)
 {
     # validate input

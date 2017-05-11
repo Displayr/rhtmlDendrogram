@@ -9,12 +9,12 @@ Mike Bostock: \url{http://bl.ocks.org/mbostock/4063570}.
 Fabio Nelli: \url{http://www.meccanismocomplesso.org/en/dendrogramma-d3-parte1/}
 }
 \usage{
-dendroNetwork(hc, height = NULL, width = NULL, fontSize = 10,
+dendroNetwork(hc, height = NULL, width = NULL, fontSize = 11,
   fontFamily = "sans-serif", linkColour = "#ccc", nodeColour = "#fff",
   nodeStroke = "steelblue", textColour = "#111", textOpacity = 0.9,
   textRotate = NULL, opacity = 0.9, margins = NULL,
   linkType = c("elbow", "diagonal"), treeOrientation = c("horizontal",
-  "vertical"), zoom = FALSE)
+  "vertical"), tooltips = NULL, zoom = FALSE)
 }
 \arguments{
 \item{hc}{a hierarchical (\code{hclust}) cluster object.}

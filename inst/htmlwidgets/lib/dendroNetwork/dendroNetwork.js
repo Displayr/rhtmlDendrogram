@@ -10,21 +10,117 @@ function DendroNetwork() {
       .attr("width", viewerWidth)
       .attr("height", viewerHeight);
 
+    var _dendroDimsNodesOnly, 
+        _dendroDimsFull;
+    // compute width of text based on all texts
+    var getDendroDims = function() {
+      var tree = d3.cluster();
+      var inner = svg.append("g").classed("inner", true);
+
+      var root = d3.hierarchy(data);
+      tree(root);
+
+      var ymax = d3.max(root.descendants(), function(d) { return d.data.y; });
+      var ymin = d3.min(root.descendants(), function(d) { return d.data.y; });
+
+      if (options.treeOrientation == "horizontal") {
+        fxinv = d3.scaleLinear().domain([ymin, ymax]).range([0, width]);
+        fx = d3.scaleLinear().domain([ymax, ymin]).range([0, width]);
+      } else {
+        fxinv = d3.scaleLinear().domain([ymin, ymax]).range([0, height]);
+        fx = d3.scaleLinear().domain([ymax, ymin]).range([0, height]);
+      }
+
+      // draw nodes
+      var node = inner.selectAll(".node")
+        .data(root.descendants())
+        .enter().append("g")
+        .attr("class", "node")
+        .on("mouseover", mouseover)
+        .on("mouseout", mouseout);
+
+      if (options.treeOrientation == "horizontal") {
+        node.attr("transform", function(d) { return "translate(" + fx(d.data.y) + "," + d.x + ")"; });
+      } else {
+        node.attr("transform", function(d) { return "translate(" + d.x + "," + fx(d.data.y) + ")"; });
+      }
+
+      // node circles
+      node.append("circle")
+        .attr("r", 4.5)
+        .style("fill", options.nodeColour)
+        .style("opacity", options.opacity)
+        .style("stroke", options.nodeStroke)
+        .style("stroke-width", "1.5px");
+
+      _dendroDimsNodesOnly = inner.node().getBBox();
+
+      // node text
+      node.append("text")
+        .attr("transform", "rotate(" + options.textRotate + ")")
+        .style("font-size", options.fontSize + "px")
+        .style("font-family", options.fontFamily)
+        .style("opacity", function(d) { return d.data.textOpacity; })
+        .style("fill", function(d) { return d.data.textColour; })
+        .text(function(d) { return d.data.name; });
+
+      if (options.treeOrientation == "horizontal") {
+        node.select("text")
+          .attr("dx", function(d) { return d.children ? -8 : 8; })
+          .attr("dy", ".31em")
+          .attr("text-anchor", function(d) { return d.children ? "end" : "start"; });
+      } else {
+        node.select("text")
+          .attr("x", function(d) { return d.children ? -8 : 8; })
+          .attr("dy", ".31em")
+          .attr("text-anchor", "start");
+      }
+
+      _dendroDimsFull = inner.node().getBBox();
+      svg.select(".inner").remove();
+      return {
+        _dendroDimsNodesOnly: _dendroDimsNodesOnly,
+        _dendroDimsFull: _dendroDimsFull
+      }
+    }
+
+    var _dendroDims = getDendroDims();
+
+    _nodeTextsWidth = _dendroDims._dendroDimsFull.width - _dendroDims._dendroDimsNodesOnly.width;
+    _nodeTextsHeight = _dendroDims._dendroDimsFull.height - _dendroDims._dendroDimsNodesOnly.height;
+
+    var svgMargins;
+    if (options.treeOrientation == "horizontal") {
+      svgMargins = {
+        bottom: 5,
+        left: 10,
+        right: 10,
+        top: 5
+      }
+    } else {
+      svgMargins = {
+        bottom: 10,
+        left: 5,
+        right: 0,
+        top: 10
+      }
+    }
+
     var tree = d3.cluster();
 
     var s = selection.selectAll("svg")
-      .attr("margins", options.margins)
+      .attr("margins", svgMargins)
       .attr("treeOrientation", options.treeOrientation);
 
-    var top = parseInt(options.margins.top),
-      right = parseInt(options.margins.right),
-      bottom = parseInt(options.margins.bottom),
-      left = parseInt(options.margins.left);
+    var top = svgMargins.top,
+      right = svgMargins.right,
+      bottom = svgMargins.bottom,
+      left = svgMargins.left;
 
-    var height = parseInt(s.attr("height")) - top - bottom,
-      width = parseInt(s.attr("width")) - right - left;
+    var height = viewerHeight - top - bottom - _nodeTextsHeight,
+      width = viewerWidth - right - left - _nodeTextsWidth;
 
-    if (s.attr("treeOrientation") == "horizontal") {
+    if (options.treeOrientation == "horizontal") {
       tree.size([height, width]);
     } else {
       tree.size([width, height]);
@@ -153,8 +249,29 @@ function DendroNetwork() {
 
     // mouseover event handler
     function mouseover() {
+
+      d3.select(this).select("circle")
+        .attr("r", 9);
+
+      d3.select(this).select("text")
+        .style("stroke-width", ".5px")
+        .style("font-size", 25 + "px")
+        .style("font-family", options.fontFamily)
+        .style("opacity", 1);
+
+      var _dim = d3.select(this).node().getBBox();
+
+      d3.select(this).select("circle")
+        .attr("r", 4.5);
+
+      d3.select(this).select("text")
+        .style("font-size", options.fontSize + "px")
+        .style("font-family", options.fontFamily)
+        .style("opacity", options.opacity);
+
       d3.select(this).select("circle").transition()
         .duration(_duration)
+        .attr("x", )
         .attr("r", 9);
 
       d3.select(this).select("text").transition()
