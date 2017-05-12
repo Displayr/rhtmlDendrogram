@@ -77,6 +77,7 @@ function DendroNetwork() {
       }
 
       _dendroDimsFull = inner.node().getBBox();
+
       svg.select(".inner").remove();
       return {
         _dendroDimsNodesOnly: _dendroDimsNodesOnly,
@@ -155,7 +156,7 @@ function DendroNetwork() {
     var ymax = d3.max(root.descendants(), function(d) { return d.data.y; });
     var ymin = d3.min(root.descendants(), function(d) { return d.data.y; });
 
-    if (s.attr("treeOrientation") == "horizontal") {
+    if (options.treeOrientation == "horizontal") {
       fxinv = d3.scaleLinear().domain([ymin, ymax]).range([0, width]);
       fx = d3.scaleLinear().domain([ymax, ymin]).range([0, width]);
     } else {
@@ -173,7 +174,7 @@ function DendroNetwork() {
       .style("stroke-width", "1.5px");
 
     if (options.linkType == "elbow") {
-      if (s.attr("treeOrientation") == "horizontal") {
+      if (options.treeOrientation == "horizontal") {
         link.attr("d", function(d, i) {
           return "M" + fx(d.source.data.y) + "," + d.source.x
             + "V" + d.target.x + "H" + fx(d.target.data.y);
@@ -185,7 +186,7 @@ function DendroNetwork() {
         });
       }
     } else {
-      if (s.attr("treeOrientation") == "horizontal") {
+      if (options.treeOrientation == "horizontal") {
         link.attr("d", function(d, i) {
           return "M" + fx(d.source.data.y) + "," + d.source.x
                 + "C" + (fx(d.source.data.y) + fx(d.target.data.y)) / 2 + "," + d.source.x
@@ -233,7 +234,7 @@ function DendroNetwork() {
       .style("fill", function(d) { return d.data.textColour; })
       .text(function(d) { return d.data.name; });
 
-    if (s.attr("treeOrientation") == "horizontal") {
+    if (options.treeOrientation == "horizontal") {
       node.select("text")
         .attr("dx", function(d) { return d.children ? -8 : 8; })
         .attr("dy", ".31em")
@@ -245,10 +246,41 @@ function DendroNetwork() {
         .attr("text-anchor", "start");
     }
 
-    var _duration = 350;
+    function getTransformation(transform) {
+      // Create a dummy g for calculation purposes only. This will never
+      // be appended to the DOM and will be discarded once this function 
+      // returns.
+      var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      
+      // Set the transform attribute to the provided string value.
+      g.setAttributeNS(null, "transform", transform);
+      
+      // consolidate the SVGTransformList containing all transformations
+      // to a single SVGTransform of type SVG_TRANSFORM_MATRIX and get
+      // its SVGMatrix. 
+      var matrix = g.transform.baseVal.consolidate().matrix;
+      
+      // Below calculations are taken and adapted from the private function
+      // transform/decompose.js of D3's module d3-interpolate.
+      var {a, b, c, d, e, f} = matrix;   // ES6, if this doesn't work, use below assignment
+      // var a=matrix.a, b=matrix.b, c=matrix.c, d=matrix.d, e=matrix.e, f=matrix.f; // ES5
+      var scaleX, scaleY, skewX;
+      if (scaleX = Math.sqrt(a * a + b * b)) a /= scaleX, b /= scaleX;
+      if (skewX = a * c + b * d) c -= a * skewX, d -= b * skewX;
+      if (scaleY = Math.sqrt(c * c + d * d)) c /= scaleY, d /= scaleY, skewX /= scaleY;
+      if (a * d < b * c) a = -a, b = -b, skewX = -skewX, scaleX = -scaleX;
+      return {
+        translateX: e,
+        translateY: f,
+        rotate: Math.atan2(b, a) * 180 / Math.PI,
+        skewX: Math.atan(skewX) * 180 / Math.PI,
+        scaleX: scaleX,
+        scaleY: scaleY
+      };
+    }
 
-    // mouseover event handler
-    function mouseover() {
+    node.each(function(d) {
+      d.nodeTransform = getTransformation(d3.select(this).attr("transform"));
 
       d3.select(this).select("circle")
         .attr("r", 9);
@@ -260,6 +292,10 @@ function DendroNetwork() {
         .style("opacity", 1);
 
       var _dim = d3.select(this).node().getBBox();
+      var _excessWidth = d.nodeTransform.translateX + _dim.width - viewerWidth; 
+      var _excessHeight = d.nodeTransform.translateY + _dim.height - viewerHeight; 
+      d._excessWidth = _excessWidth;
+      d._excessHeight = _excessHeight;
 
       d3.select(this).select("circle")
         .attr("r", 4.5);
@@ -268,13 +304,58 @@ function DendroNetwork() {
         .style("font-size", options.fontSize + "px")
         .style("font-family", options.fontFamily)
         .style("opacity", options.opacity);
+    });
 
-      d3.select(this).select("circle").transition()
-        .duration(_duration)
-        .attr("x", )
-        .attr("r", 9);
+    var _duration = 300;
 
-      d3.select(this).select("text").transition()
+    // mouseover event handler
+    function mouseover(d) {
+
+      if (options.treeOrientation == "horizontal") {
+        if (d._excessWidth > 0) {
+          d3.select(this)
+            .transition("2")
+            .duration(_duration)
+            .attr("transform", function(d) {
+              return "translate(" + (d.nodeTransform.translateX - d._excessWidth) + "," + d.nodeTransform.translateY + ")";
+            });
+          d3.select(this).select("circle")
+            .transition("1")
+            .duration(_duration)
+            .attr("cx", -4)
+            .attr("cy", -4)
+            .attr("r", 9);
+        } else {
+          d3.select(this).select("circle")
+            .transition("1")
+            .duration(_duration)
+            .attr("r", 9);
+        }
+      } else {
+        if (d._excessHeight > 0) {
+          d3.select(this)
+            .transition("2")
+            .duration(_duration)
+            .attr("transform", function(d) {
+              return "translate(" + (d.nodeTransform.translateX - Math.tan((90 - options.textRotate) * Math.PI / 180)*d._excessHeight) 
+                + "," + (d.nodeTransform.translateY - d._excessHeight) + ")";
+            });
+          d3.select(this).select("circle")
+            .transition("1")
+            .duration(_duration)
+            .attr("cx", -4)
+            .attr("cy", -4)
+            .attr("r", 9);
+        } else {
+          d3.select(this).select("circle")
+            .transition("1")
+            .duration(_duration)
+            .attr("r", 9);
+        }
+      }
+
+      d3.select(this).select("text")
+        .transition("1")
         .duration(_duration)
         .style("stroke-width", ".5px")
         .style("font-size", 25 + "px")
@@ -283,12 +364,24 @@ function DendroNetwork() {
     }
 
     // mouseout event handler
-    function mouseout() {
-      d3.select(this).select("circle").transition()
+    function mouseout(d) {
+
+      d3.select(this)
+        .transition("2")
         .duration(_duration)
+        .attr("transform", function(d) {
+          return "translate(" + d.nodeTransform.translateX + "," + d.nodeTransform.translateY + ")";
+        });
+
+      d3.select(this).select("circle")
+        .transition("1")
+        .duration(_duration)
+        .attr("cx", 0)
+        .attr("cy", 0)
         .attr("r", 4.5);
 
-      d3.select(this).select("text").transition()
+      d3.select(this).select("text")
+        .transition("1")
         .duration(_duration)
         .style("font-size", options.fontSize + "px")
         .style("font-family", options.fontFamily)
