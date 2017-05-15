@@ -130,6 +130,7 @@ function DendroNetwork() {
     var zoom = d3.zoom().scaleExtent([0.5, 3]);
 
     svg.selectAll("*").remove();
+    d3.select('body').select('.d3-tip').remove();
 
     svg = svg
       .append("g").attr("class","zoom-layer")
@@ -228,6 +229,7 @@ function DendroNetwork() {
     // node text
     node.append("text")
       .attr("transform", "rotate(" + options.textRotate + ")")
+      .attr("class", "nodeText")
       .style("font-size", options.fontSize + "px")
       .style("font-family", options.fontFamily)
       .style("opacity", function(d) { return d.data.textOpacity; })
@@ -241,10 +243,11 @@ function DendroNetwork() {
         .attr("text-anchor", function(d) { return d.children ? "end" : "start"; });
     } else {
       node.select("text")
-        .attr("x", function(d) { return d.children ? -8 : 8; })
+        .attr("dx", function(d) { return d.children ? -8 : 8; })
         .attr("dy", ".31em")
         .attr("text-anchor", "start");
     }
+
 
     function getTransformation(transform) {
       // Create a dummy g for calculation purposes only. This will never
@@ -282,6 +285,10 @@ function DendroNetwork() {
     node.each(function(d) {
       d.nodeTransform = getTransformation(d3.select(this).attr("transform"));
 
+      var _dim0 = d3.select(this).node().getBBox();
+      d._width0 = _dim0.width;
+      d._height0 = _dim0.height;
+
       d3.select(this).select("circle")
         .attr("r", 9);
 
@@ -296,6 +303,8 @@ function DendroNetwork() {
       var _excessHeight = d.nodeTransform.translateY + _dim.height - viewerHeight; 
       d._excessWidth = _excessWidth;
       d._excessHeight = _excessHeight;
+      d._width = _dim.width;
+      d._height = _dim.height;
 
       d3.select(this).select("circle")
         .attr("r", 4.5);
@@ -306,10 +315,141 @@ function DendroNetwork() {
         .style("opacity", options.opacity);
     });
 
+    var realFormatter = d3.format(",.1f");
+    var intFormatter = d3.format(",d");
+
+    // tooltips
+    var tip = {};
+    var tipTriangle;
+    if (options.colnames && options.treeOrientation == "horizontal") {
+      var tipMax = Number.MIN_VALUE,
+          tipMin = Number.MAX_VALUE;
+      node.each(function(d) {
+        if (d.data.tips) {
+          var ma = d3.max(d.data.tips);
+          var mi = d3.min(d.data.tips);
+          tipMax = ma > tipMax ? ma : tipMax;
+          tipMin = mi < tipMin ? mi : tipMin;
+        }
+      });
+
+      tip = d3.tip()
+              .attr('class', 'd3-tip')
+              .html(function(d) {return d.tooltipHTML; });
+
+      tipTriangle = selection
+                      .append("div")
+                      .attr("id", "littleTriangle")
+                      .style("visibility", "hidden");
+
+      var maxBarLength = 50;
+      var tipBarScale = d3.scaleLinear().domain([tipMin/2, tipMax]).range([0, maxBarLength])
+      node.each(function(d) {
+        if (d.data.tips) {
+          var t = "";
+          var nval = d.data.tips.length;
+          t = t + "<div class='tipTableContainer' style='white-space:nowrap;'>";
+          t = t + "Name: " + d.data.name + "<br>" + "<table class='tipTable'>";
+          for (var i = 0; i < nval; i++) {
+              t = t + "<tr>";
+              t = t + "<td class='tipDClassification' style='white-space:nowrap;'>" + options.colnames[i] + "</td>";
+              t = t + "<td class='tipDClassification' style='white-space:nowrap;'>";
+              t = t + "<div style='width:" + tipBarScale(d.data.tips[i]) + "px;height:8px;background-color:steelblue'></div>" + "</td>";
+              t = t + "</tr>";
+          }
+          t = t + "</table></div>";
+          d.tooltipHTML = t;
+        }
+      });
+
+      node.selectAll("text")
+      .on("mouseover", function(d) {
+        var thisTip;
+        thisTip = tip.offset([-20,0]).show(d);
+        var tipHeight = parseFloat(thisTip.style("height"));
+        var tipWidth = parseFloat(thisTip.style("width"));
+        var clientRect = this.getBoundingClientRect();
+        // southward and northward tip top y position
+        var tipSouth = clientRect.bottom + 5;
+        var tipNorth = clientRect.top - 5;
+        var tipEast = clientRect.right + 5;
+
+        if (tipNorth - tipHeight >= 0) {
+            // northward tip
+          thisTip = thisTip.direction("n").offset([-20,0]).show(d);
+          d3.select("#littleTriangle")
+          .attr("class", "northTip")
+          .style("visibility", "visible")
+          .style("top", (clientRect.top - 27.5) + "px")
+          .style("left", (clientRect.left + clientRect.width/2 - 5) + "px");
+
+          if (parseFloat(thisTip.style("left")) < 0) {
+              thisTip.style("left", "5px");
+          } else if (parseFloat(thisTip.style("left")) + tipWidth > viewerWidth) {
+              thisTip.style("left", (viewerWidth - 5 - tipWidth) + "px");
+          }
+
+        } else if (viewerHeight - tipSouth >= tipHeight) {
+
+          thisTip = thisTip.direction("s").offset([20,0]).show(d);
+          d3.select("#littleTriangle")
+          .attr("class", "southTip")
+          .style("visibility", "visible")
+          .style("top", (clientRect.bottom + 7.5) + "px")
+          .style("left", (clientRect.left + clientRect.width/2 - 5) + "px");
+
+          if (parseFloat(thisTip.style("left")) < 0) {
+              thisTip.style("left", "5px");
+          } else if (parseFloat(thisTip.style("left")) + tipWidth > viewerWidth) {
+              thisTip.style("left", (viewerWidth - 5 - tipWidth) + "px");
+          }
+
+        } else if (tipEast >= viewerWidth * 0.5) {
+
+          thisTip = thisTip.direction("w").offset([0, -10]).show(d);
+          d3.select("#littleTriangle")
+          .attr("class", "westTip")
+          .style("visibility", "visible")
+          .style("top", (clientRect.top + clientRect.height/2 - 5) + "px")
+          .style("left", (clientRect.left - 12.5) + "px");
+
+          if (parseFloat(thisTip.style("top")) < 0) {
+              thisTip.style("top", "5px");
+          } else if (parseFloat(thisTip.style("top")) + tipHeight > viewerHeight) {
+              thisTip.style("top", (viewerHeight - tipHeight - 5) + "px");
+          }
+
+        } else {
+          thisTip = thisTip.direction("e").offset([0, 10]).show(d);
+          d3.select("#littleTriangle")
+          .attr("class", "eastTip")
+          .style("visibility", "visible")
+          .style("top", (clientRect.top + clientRect.height/2 - 5) + "px")
+          .style("left", (clientRect.right + 2.5) + "px");
+
+          if (parseFloat(thisTip.style("top")) < 0) {
+              thisTip.style("top", "5px");
+          } else if (parseFloat(thisTip.style("top")) + tipHeight > viewerHeight) {
+              thisTip.style("top", (viewerHeight - tipHeight - 5) + "px");
+          }
+        }
+      })
+      .on("mouseout", function(d) {
+        tip.hide(d);
+        d3.select("#littleTriangle").style("visibility", "hidden");
+      });
+
+      svg.call(tip);
+    }
+
     var _duration = 300;
 
     // mouseover event handler
     function mouseover(d) {
+
+      // if (options.colnames) {
+      //   tip.show(d);
+      // }
 
       if (options.treeOrientation == "horizontal") {
         if (d._excessWidth > 0) {
@@ -319,17 +459,39 @@ function DendroNetwork() {
             .attr("transform", function(d) {
               return "translate(" + (d.nodeTransform.translateX - d._excessWidth) + "," + d.nodeTransform.translateY + ")";
             });
+
           d3.select(this).select("circle")
             .transition("1")
             .duration(_duration)
             .attr("cx", -4)
-            .attr("cy", -4)
             .attr("r", 9);
+
+          d3.select(this).select("text")
+            .transition("1")
+            .duration(_duration)
+            .attr("dx", function(d) { return d.children ? -8 : 8; })
+            .attr("dy", ".31em")
+            .style("stroke-width", ".5px")
+            .style("font-size", 25 + "px")
+            .style("font-family", options.fontFamily)
+            .style("opacity", 1);
+
         } else {
+
           d3.select(this).select("circle")
             .transition("1")
             .duration(_duration)
             .attr("r", 9);
+
+          d3.select(this).select("text")
+            .transition("1")
+            .duration(_duration)
+            .attr("dx", function(d) { return d.children ? -12 : 12; })
+            .attr("dy", ".31em")
+            .style("stroke-width", ".5px")
+            .style("font-size", 25 + "px")
+            .style("font-family", options.fontFamily)
+            .style("opacity", 1);
         }
       } else {
         if (d._excessHeight > 0) {
@@ -343,28 +505,44 @@ function DendroNetwork() {
           d3.select(this).select("circle")
             .transition("1")
             .duration(_duration)
-            .attr("cx", -4)
             .attr("cy", -4)
             .attr("r", 9);
+          d3.select(this).select("text")
+            .transition("1")
+            .duration(_duration)
+            .attr("dx", function(d) { return d.children ? -8 : 8; })
+            .attr("dy", ".31em")
+            .style("stroke-width", ".5px")
+            .style("font-size", 25 + "px")
+            .style("font-family", options.fontFamily)
+            .style("opacity", 1);
+
         } else {
           d3.select(this).select("circle")
             .transition("1")
             .duration(_duration)
             .attr("r", 9);
+          d3.select(this).select("text")
+            .transition("1")
+            .duration(_duration)
+            .attr("dx", function(d) { return d.children ? -12 : 12; })
+            .attr("dy", ".31em")
+            .style("stroke-width", ".5px")
+            .style("font-size", 25 + "px")
+            .style("font-family", options.fontFamily)
+            .style("opacity", 1);
         }
       }
 
-      d3.select(this).select("text")
-        .transition("1")
-        .duration(_duration)
-        .style("stroke-width", ".5px")
-        .style("font-size", 25 + "px")
-        .style("font-family", options.fontFamily)
-        .style("opacity", 1);
+
     }
 
     // mouseout event handler
     function mouseout(d) {
+
+      // if (options.colnames) {
+      //   tip.hide(d);
+      // }
 
       d3.select(this)
         .transition("2")
@@ -383,6 +561,8 @@ function DendroNetwork() {
       d3.select(this).select("text")
         .transition("1")
         .duration(_duration)
+        .attr("dx", function(d) { return d.children ? -8 : 8; })
+        .attr("dy", ".31em")
         .style("font-size", options.fontSize + "px")
         .style("font-family", options.fontFamily)
         .style("opacity", options.opacity);

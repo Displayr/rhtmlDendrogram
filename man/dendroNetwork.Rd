@@ -14,7 +14,13 @@ dendroNetwork(hc, height = NULL, width = NULL, fontSize = 11,
   nodeStroke = "steelblue", textColour = "#111", textOpacity = 0.9,
   textRotate = NULL, opacity = 0.9, margins = NULL,
   linkType = c("elbow", "diagonal"), treeOrientation = c("horizontal",
-  "vertical"), tooltips = NULL, zoom = FALSE)
+  "vertical"), tooltips = NULL, tooltipsFontSize = 11,
+  tooltipsFontFamily = "sans-serif", tooltipsFontColor = "#fff",
+  title = NULL, titleFontSize = 24, titleFontFamily = "sans-serif",
+  titleFontColor = "#111", subtitle = NULL, subtitleFontSize = 18,
+  subtitleFontFamily = "sans-serif", subtitleFontColor = "#111",
+  footer = NULL, footerFontSize = 11, footerFontFamily = "sans-serif",
+  footerFontColor = "#111", zoom = FALSE)
 }
 \arguments{
 \item{hc}{a hierarchical (\code{hclust}) cluster object.}

@@ -71,7 +71,26 @@ dendroNetwork <- function(
     margins = NULL,
     linkType = c("elbow", "diagonal"),
     treeOrientation = c("horizontal", "vertical"),
+
     tooltips = NULL,
+    tooltipsFontSize = 11,
+    tooltipsFontFamily = "sans-serif",
+    tooltipsFontColor = "#fff",
+
+    title = NULL,
+    titleFontSize = 24,
+    titleFontFamily = "sans-serif",
+    titleFontColor = "#111",
+
+    subtitle = NULL,
+    subtitleFontSize = 18,
+    subtitleFontFamily = "sans-serif",
+    subtitleFontColor = "#111",
+
+    footer = NULL,
+    footerFontSize = 11,
+    footerFontFamily = "sans-serif",
+    footerFontColor = "#111",
     zoom = FALSE)
 {
     # validate input
@@ -84,7 +103,19 @@ dendroNetwork <- function(
     treeOrientation = match.arg(treeOrientation[1],
                                 c("horizontal", "vertical"))
 
-    root <- as.dendroNetwork(hc, textColour, textOpacity)
+    if (!is.null(tooltips)) {
+      tooltips_colnames = colnames(tooltips)
+      if (is.null(tooltips_colnames)) {
+        tooltips_colnames = paste0(rep("feature", ncol(tooltips)), 1:length(tooltips))
+      }
+      tooltips = as.matrix(tooltips)
+      dimnames(tooltips) = NULL
+      colnames = tooltips_colnames
+    } else {
+      colnames = NULL
+    }
+
+    root <- as.dendroNetwork(hc, textColour, textOpacity, tooltips)
 
     if (treeOrientation == "vertical")
         margins_def = list(top = 10, right = 40, bottom = 150, left = 10)
@@ -117,6 +148,22 @@ dendroNetwork <- function(
         opacity = opacity,
         linkType = linkType,
         treeOrientation = treeOrientation,
+        colnames = colnames,
+        tooltipsFontSize = tooltipsFontSize,
+        tooltipsFontFamily = tooltipsFontFamily,
+        tooltipsFontColor = tooltipsFontColor,
+        title = title,
+        titleFontSize = titleFontSize,
+        titleFontFamily = titleFontFamily,
+        titleFontColor = titleFontColor,
+        subtitle = subtitle,
+        subtitleFontSize = subtitleFontSize,
+        subtitleFontFamily = subtitleFontFamily,
+        subtitleFontColor = subtitleFontColor,
+        footer = footer,
+        footerFontSize = footerFontSize,
+        footerFontFamily = footerFontFamily,
+        footerFontColor = footerFontColor,
         zoom = zoom
     )
 
@@ -130,7 +177,7 @@ dendroNetwork <- function(
         package = "rhtmlDendrogram")
 }
 
-as.dendroNetwork <- function(hc, textColour, textOpacity)
+as.dendroNetwork <- function(hc, textColour, textOpacity, tips)
 {
     if (!("hclust" %in% class(hc)))
         stop("hc must be a object of class hclust")
@@ -139,18 +186,28 @@ as.dendroNetwork <- function(hc, textColour, textOpacity)
         stop("textColour length must match label length")
     if (length(textOpacity) != length(hc$labels))
         stop("textOpacity length must match label length")
+    if (!is.null(tips) && nrow(tips) != length(hc$labels))
+        stop("tooltips must have same nrow as hc")
 
     ul <- function(lev)
     {
         child = lapply(1:2, function(i) {
             val <- abs(hc$merge[lev, ][i])
-            if (hc$merge[lev, ][i] < 0)
+            if (hc$merge[lev, ][i] < 0) {
+              if (!is.null(tips)) {
                 list(name = hc$labels[val], y = 0, textColour = textColour[val],
-                     textOpacity = textOpacity[val])
-            else
-                ul(val)
+                     textOpacity = textOpacity[val], tips = tips[val,])
+              } else {
+                list(name = hc$labels[val], y = 0, textColour = textColour[val],
+                     textOpacity = textOpacity[val], tips = NULL)
+              }
+            }
+            else {
+              ul(val)
+            }
+
         })
-        list(name = "", y = hc$height[lev], children = child)
+        list(name = "", y = hc$height[lev], children = child, tips = NULL)
     }
     ul(nrow(hc$merge))
 }

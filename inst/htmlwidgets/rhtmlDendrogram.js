@@ -10,6 +10,9 @@ HTMLWidgets.widget({
   },
 
   resize: function(el, width, height, instance) {
+    if (width < 100 || height < 100) {
+      return;
+    }
     instance.width(width).height(height);
     if (instance.data) {
       this.doRenderValue(el, instance);
