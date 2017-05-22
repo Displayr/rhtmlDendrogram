@@ -15,9 +15,9 @@ dendroNetwork(hc, height = NULL, width = NULL, fontSize = 11,
   textRotate = NULL, opacity = 0.9, margins = NULL,
   linkType = c("elbow", "diagonal"), treeOrientation = c("horizontal",
   "vertical"), tooltips = NULL, tooltipsFontSize = 11,
-  tooltipsFontFamily = "sans-serif", tooltipsFontColor = "#fff",
-  title = NULL, titleFontSize = 24, titleFontFamily = "sans-serif",
-  titleFontColor = "#111", subtitle = NULL, subtitleFontSize = 18,
+  tooltipsFontFamily = "sans-serif", title = NULL, titleFontSize = 24,
+  titleFontFamily = "sans-serif", titleFontColor = "#111",
+  subtitle = NULL, subtitleFontSize = 18,
   subtitleFontFamily = "sans-serif", subtitleFontColor = "#111",
   footer = NULL, footerFontSize = 11, footerFontFamily = "sans-serif",
   footerFontColor = "#111", zoom = FALSE)
@@ -66,6 +66,36 @@ are 'elbow' and 'diagonal'.}
 \item{treeOrientation}{character specifying the tree orientation, Options
 are 'vertical' and 'horizontal'.}
 
+\item{tooltips}{a matrix containing the original data of each point. See examples. Defaults to NULL.}
+
+\item{tooltipsFontSize}{integer specifying tooltip font size. Defaults to 11.}
+
+\item{tooltipsFontFamily}{character string specifying tooltip font family. Defaults to "sans-serif".}
+
+\item{title}{character string specifying the chart title. Defaults to NULL.}
+
+\item{titleFontSize}{integer specifying the font size of the title. Defaults to 24.}
+
+\item{titleFontFamily}{character string specifying the font family of the title. Defaults to "sans-serif".}
+
+\item{titleFontColor}{character string specifying the color of the title. Defaults to "#111",}
+
+\item{subtitle}{character string specifying the chart subtitle. Defaults to NULL.}
+
+\item{subtitleFontSize}{integer specifying the font size of the subtitle. Defaults to 18.}
+
+\item{subtitleFontFamily}{character string specifying the font family of the subtitle. Defaults to "sans-serif",}
+
+\item{subtitleFontColor}{character string specifying the color of the subtitle. Defaults to "#111",}
+
+\item{footer}{character string specifying the chart footer. Defaults to NULL.}
+
+\item{footerFontSize}{integer specifying the font size of the footer. Defaults to 11,}
+
+\item{footerFontFamily}{character string specifying the font family of the footer. Defaults to "sans-serif",}
+
+\item{footerFontColor}{character string specifying the color of the footer. Defaults to "#111",}
+
 \item{zoom}{logical enabling plot zoom and pan}
 }
 \description{
@@ -85,6 +115,7 @@ dendroNetwork(hc, textColour = c("red", "green", "orange")[cutree(hc, 3)],
                height = 600)
 dendroNetwork(hc, textColour = c("red", "green", "orange")[cutree(hc, 3)],
                treeOrientation = "vertical")
+dendroNetwork(hc, textColour = c("red", "green", "orange")[cutree(hc, 3)], zoom = TRUE, tooltips = USArrests)
 }
 }
 

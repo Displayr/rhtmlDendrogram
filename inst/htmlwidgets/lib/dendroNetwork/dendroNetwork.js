@@ -1,10 +1,87 @@
 function DendroNetwork() {
+  'use strict'
   var data,
       options,
       viewerWidth,
       viewerHeight;
 
   function chart(selection) {
+
+
+    function wrap_new(text, width) {
+      var separators = {" ": 1, "-": 1};
+      var lineNumbers = [];
+      text.each(function() {
+          var text = d3.select(this),
+              chars = text.text().split("").reverse(),
+              c,
+              nextchar,
+              sep,
+              newline = [],
+              lineTemp = [],
+              lineNumber = 0,
+              lineHeight = 1.1, // ems
+              x = text.attr("x"),
+              y = text.attr("y"),
+              dy = parseFloat(text.attr("dy")),
+              tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+          while (c = chars.pop()) {
+              // remove leading space
+              if (lineTemp.length === 0 && c === " ") {
+                continue;
+              }
+              lineTemp.push(c);
+              tspan.text(lineTemp.join(""));
+              if (tspan.node().getComputedTextLength() > width) {
+
+              // if no separator detected before c, wait until there is one
+              // otherwise, wrap texts
+                if (sep === undefined) {
+                  if (c in separators) {
+                    if (c === " ") {
+                      lineTemp.pop();
+                    }
+                    // make new line
+                    sep = undefined;
+                    tspan.text(lineTemp.join(""));
+                    tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text("");
+                    lineTemp = [];
+                    newline = [];
+                  }
+                } else {
+                  // pop out chars until reaching sep
+                  if (c in separators) {
+                    newline.push(lineTemp.pop());
+                  }
+                  nextchar = lineTemp.pop();
+                  while (nextchar !== sep && lineTemp.length > 0) {
+                    newline.push(nextchar);
+                    nextchar = lineTemp.pop();
+                  }
+                  newline.reverse();
+                  while (nextchar = newline.pop()) {
+                    chars.push(nextchar);
+                  }
+
+                  if (sep !== " ") {
+                    lineTemp.push(sep);
+                  }
+                  // make new line
+                  sep = undefined;
+                  tspan.text(lineTemp.join(""));
+                  tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text("");
+                  lineTemp = [];
+                  newline = [];
+                }
+              } else {
+                  if (c in separators) {
+                    sep = c;
+                  }
+              }
+          }
+          lineNumbers.push(lineNumber + 1);
+      });
+    }
 
     var svg = selection.append("svg")
       .attr("width", viewerWidth)
@@ -20,17 +97,6 @@ function DendroNetwork() {
       var root = d3.hierarchy(data);
       tree(root);
 
-      var ymax = d3.max(root.descendants(), function(d) { return d.data.y; });
-      var ymin = d3.min(root.descendants(), function(d) { return d.data.y; });
-
-      if (options.treeOrientation == "horizontal") {
-        fxinv = d3.scaleLinear().domain([ymin, ymax]).range([0, width]);
-        fx = d3.scaleLinear().domain([ymax, ymin]).range([0, width]);
-      } else {
-        fxinv = d3.scaleLinear().domain([ymin, ymax]).range([0, height]);
-        fx = d3.scaleLinear().domain([ymax, ymin]).range([0, height]);
-      }
-
       // draw nodes
       var node = inner.selectAll(".node")
         .data(root.descendants())
@@ -38,12 +104,6 @@ function DendroNetwork() {
         .attr("class", "node")
         .on("mouseover", mouseover)
         .on("mouseout", mouseout);
-
-      if (options.treeOrientation == "horizontal") {
-        node.attr("transform", function(d) { return "translate(" + fx(d.data.y) + "," + d.x + ")"; });
-      } else {
-        node.attr("transform", function(d) { return "translate(" + d.x + "," + fx(d.data.y) + ")"; });
-      }
 
       // node circles
       node.append("circle")
@@ -87,8 +147,9 @@ function DendroNetwork() {
 
     var _dendroDims = getDendroDims();
 
-    _nodeTextsWidth = _dendroDims._dendroDimsFull.width - _dendroDims._dendroDimsNodesOnly.width;
-    _nodeTextsHeight = _dendroDims._dendroDimsFull.height - _dendroDims._dendroDimsNodesOnly.height;
+    // width and height of the node texts
+    var _nodeTextsWidth = _dendroDims._dendroDimsFull.width - _dendroDims._dendroDimsNodesOnly.width;
+    var _nodeTextsHeight = _dendroDims._dendroDimsFull.height - _dendroDims._dendroDimsNodesOnly.height;
 
     var svgMargins;
     if (options.treeOrientation == "horizontal") {
@@ -107,18 +168,82 @@ function DendroNetwork() {
       }
     }
 
+    var titleWidth = 0,
+        titleHeight = 0,
+        subtitleWidth = 0,
+        subtitleHeight = 0,
+        footerWidth = 0,
+        footerHeight = 0;
+
+    if (options.title) {
+      svg.append("g")
+          .attr("class", "gtitle")
+          .append("text")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("dy", 0)
+          .text(options.title)
+          .style("font-family", options.titleFontFamily)
+          .style("font-size", options.titleFontSize)
+          .style("fill", options.titleFontColor)
+          .style("text-anchor", "middle")
+          .call(wrap_new, viewerWidth - 10);
+
+      var _titleDims = d3.select(".gtitle").node().getBBox();
+      titleWidth = _titleDims.width;
+      titleHeight = _titleDims.height;
+    }
+
+    if (options.subtitle) {
+      svg.append("g")
+          .attr("class", "gsubtitle")
+          .append("text")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("dy", 0)
+          .text(options.subtitle)
+          .style("font-family", options.subtitleFontFamily)
+          .style("font-size", options.subtitleFontSize)
+          .style("fill", options.subtitleFontColor)
+          .style("text-anchor", "middle")
+          .call(wrap_new, viewerWidth - 10);
+
+      var _subtitleDims = d3.select(".gsubtitle").node().getBBox();
+      subtitleWidth = _subtitleDims.width;
+      subtitleHeight = _subtitleDims.height;
+    }
+
+    if (options.footer) {
+      svg.append("g")
+          .attr("class", "gfooter")
+          .append("text")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("dy", 0)
+          .text(options.footer)
+          .style("font-family", options.footerFontFamily)
+          .style("font-size", options.footerFontSize)
+          .style("fill", options.footerFontColor)
+          .style("text-anchor", "start")
+          .call(wrap_new, viewerWidth - 10);
+
+      var _footerDims = d3.select(".gfooter").node().getBBox();
+      footerWidth = _footerDims.width;
+      footerHeight = _footerDims.height;
+    }
+
     var tree = d3.cluster();
 
     var s = selection.selectAll("svg")
       .attr("margins", svgMargins)
       .attr("treeOrientation", options.treeOrientation);
 
-    var top = svgMargins.top,
+    var top = svgMargins.top + titleHeight + subtitleHeight,
       right = svgMargins.right,
       bottom = svgMargins.bottom,
       left = svgMargins.left;
 
-    var height = viewerHeight - top - bottom - _nodeTextsHeight,
+    var height = viewerHeight - top - bottom - _nodeTextsHeight - footerHeight,
       width = viewerWidth - right - left - _nodeTextsWidth;
 
     if (options.treeOrientation == "horizontal") {
@@ -132,10 +257,63 @@ function DendroNetwork() {
     svg.selectAll("*").remove();
     d3.select('body').select('.d3-tip').remove();
 
+    var mainsvg = svg;
     svg = svg
       .append("g").attr("class","zoom-layer")
       .append("g")
       .attr("transform", "translate(" + left + "," + top + ")");
+
+    if (options.title) {
+      mainsvg.append("g")
+          .attr("class", "gtitle")
+          .append("text")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("dy", 0)
+          .text(options.title)
+          .style("font-family", options.titleFontFamily)
+          .style("font-size", options.titleFontSize)
+          .style("fill", options.titleFontColor)
+          .style("text-anchor", "middle")
+          .call(wrap_new, viewerWidth - 10);
+
+      d3.select(".gtitle").attr("transform", "translate(" + viewerWidth/2 + "," + options.titleFontSize + ")");
+    }
+
+    if (options.subtitle) {
+      mainsvg.append("g")
+          .attr("class", "gsubtitle")
+          .append("text")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("dy", 0)
+          .text(options.subtitle)
+          .style("font-family", options.subtitleFontFamily)
+          .style("font-size", options.subtitleFontSize)
+          .style("fill", options.subtitleFontColor)
+          .style("text-anchor", "middle")
+          .call(wrap_new, viewerWidth - 10);
+
+      d3.select(".gsubtitle").attr("transform", "translate(" + viewerWidth/2 + "," + (titleHeight + options.subtitleFontSize) + ")");
+    }
+
+    if (options.footer) {
+      mainsvg.append("g")
+          .attr("class", "gfooter")
+          .append("text")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("dy", 0)
+          .text(options.footer)
+          .style("font-family", options.footerFontFamily)
+          .style("font-size", options.footerFontSize)
+          .style("fill", options.footerFontColor)
+          .style("text-anchor", "start")
+          .call(wrap_new, viewerWidth - 10);
+
+      d3.select(".gfooter").attr("transform", "translate(" + 0 + "," + (viewerHeight - footerHeight + options.footerFontSize/2) + ")");
+
+    }
 
     if (options.zoom) {
        zoom.on("zoom", function() {
@@ -157,6 +335,7 @@ function DendroNetwork() {
     var ymax = d3.max(root.descendants(), function(d) { return d.data.y; });
     var ymin = d3.min(root.descendants(), function(d) { return d.data.y; });
 
+    var fxinv, fx;
     if (options.treeOrientation == "horizontal") {
       fxinv = d3.scaleLinear().domain([ymin, ymax]).range([0, width]);
       fx = d3.scaleLinear().domain([ymax, ymin]).range([0, width]);
@@ -346,13 +525,15 @@ function DendroNetwork() {
       var tipBarScale = d3.scaleLinear().domain([tipMin/2, tipMax]).range([0, maxBarLength])
       node.each(function(d) {
         if (d.data.tips) {
+          var ft_s = options.tooltipsFontSize;
+          var ft_f = options.tooltipsFontFamily;
           var t = "";
           var nval = d.data.tips.length;
-          t = t + "<div class='tipTableContainer' style='white-space:nowrap;'>";
+          t = t + "<div class='tipTableContainer' style='white-space:nowrap;" + "font-size:" + ft_s + "px;font-family:" + ft_f + ";'>";
           t = t + "Name: " + d.data.name + "<br>" + "<table class='tipTable'>";
           for (var i = 0; i < nval; i++) {
               t = t + "<tr>";
-              t = t + "<td class='tipDClassification' style='white-space:nowrap;'>" + options.colnames[i] + "</td>";
+              t = t + "<td class='tipDClassification' style='white-space:nowrap;" + "font-size:" + ft_s + "px;font-family:" + ft_f + ";'>" + options.colnames[i] + "</td>";
               t = t + "<td class='tipDClassification' style='white-space:nowrap;'>";
               t = t + "<div style='width:" + tipBarScale(d.data.tips[i]) + "px;height:8px;background-color:steelblue'></div>" + "</td>";
               t = t + "</tr>";

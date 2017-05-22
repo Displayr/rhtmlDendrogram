@@ -30,6 +30,23 @@
 #' are 'vertical' and 'horizontal'.
 #' @param zoom logical enabling plot zoom and pan
 #'
+#' @param tooltips a matrix containing the original data of each point. See examples. Defaults to NULL.
+#' @param tooltipsFontSize integer specifying tooltip font size. Defaults to 11.
+#' @param tooltipsFontFamily character string specifying tooltip font family. Defaults to "sans-serif".
+#'
+#' @param title character string specifying the chart title. Defaults to NULL.
+#' @param titleFontSize integer specifying the font size of the title. Defaults to 24.
+#' @param titleFontFamily character string specifying the font family of the title. Defaults to "sans-serif".
+#' @param titleFontColor character string specifying the color of the title. Defaults to "#111",
+#' @param subtitle character string specifying the chart subtitle. Defaults to NULL.
+#' @param subtitleFontSize integer specifying the font size of the subtitle. Defaults to 18.
+#' @param subtitleFontFamily character string specifying the font family of the subtitle. Defaults to "sans-serif",
+#' @param subtitleFontColor character string specifying the color of the subtitle. Defaults to "#111",
+#' @param footer character string specifying the chart footer. Defaults to NULL.
+#' @param footerFontSize integer specifying the font size of the footer. Defaults to 11,
+#' @param footerFontFamily character string specifying the font family of the footer. Defaults to "sans-serif",
+#' @param footerFontColor character string specifying the color of the footer. Defaults to "#111",
+#'
 #'
 #' @examples
 #' \dontrun{
@@ -45,6 +62,7 @@
 #'                height = 600)
 #' dendroNetwork(hc, textColour = c("red", "green", "orange")[cutree(hc, 3)],
 #'                treeOrientation = "vertical")
+#' dendroNetwork(hc, textColour = c("red", "green", "orange")[cutree(hc, 3)], zoom = TRUE, tooltips = USArrests)
 #' }
 #'
 #' @source Mike Bostock: \url{http://bl.ocks.org/mbostock/4063570}.
@@ -75,7 +93,6 @@ dendroNetwork <- function(
     tooltips = NULL,
     tooltipsFontSize = 11,
     tooltipsFontFamily = "sans-serif",
-    tooltipsFontColor = "#fff",
 
     title = NULL,
     titleFontSize = 24,
@@ -151,7 +168,6 @@ dendroNetwork <- function(
         colnames = colnames,
         tooltipsFontSize = tooltipsFontSize,
         tooltipsFontFamily = tooltipsFontFamily,
-        tooltipsFontColor = tooltipsFontColor,
         title = title,
         titleFontSize = titleFontSize,
         titleFontFamily = titleFontFamily,
