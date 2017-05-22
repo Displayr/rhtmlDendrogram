@@ -257,7 +257,7 @@ function DendroNetwork() {
     svg.selectAll("*").remove();
     d3.select('body').select('.d3-tip').remove();
 
-    var mainsvg = svg;
+    var mainsvg = svg.attr("class","mainsvg");
     svg = svg
       .append("g").attr("class","zoom-layer")
       .append("g")
