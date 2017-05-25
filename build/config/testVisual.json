@@ -1,6 +1,6 @@
 {
-  "browserWidth": 1280,
-  "browserHeight": 670,
+  "browserWidth": 700,
+  "browserHeight": 600,
   "defaultMatchTimeout": 5,
   "pageLoadWaitSeconds": 1,
   "forceFullPageScreenshot": true
