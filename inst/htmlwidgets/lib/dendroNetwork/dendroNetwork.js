@@ -9,7 +9,7 @@ function DendroNetwork() {
 
 
     function wrap_new(text, width) {
-      var separators = {" ": 1, "-": 1};
+      var separators = {" ": 1};
       var lineNumbers = [];
       text.each(function() {
           var text = d3.select(this),
