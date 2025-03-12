@@ -8,4 +8,7 @@ pkgs.rPackages.buildRPackage {
     More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
   '';
+  propagatedBuildInputs = with pkgs.rPackages; [ 
+    htmlwidgets
+  ];
 }
