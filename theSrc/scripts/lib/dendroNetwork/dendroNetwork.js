@@ -523,6 +523,14 @@ function DendroNetwork() {
 
       var maxBarLength = 50;
       var tipBarScale = d3.scaleLinear().domain([tipMin/2, tipMax]).range([0, maxBarLength])
+      var escapeTipHtml = function (value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      };
       node.each(function(d) {
         if (d.data.tips) {
           var ft_s = options.tooltipsFontSize;
@@ -530,10 +538,10 @@ function DendroNetwork() {
           var t = "";
           var nval = d.data.tips.length;
           t = t + "<div class='tipTableContainer' style='white-space:nowrap;" + "font-size:" + ft_s + "px;font-family:" + ft_f + ";'>";
-          t = t + "Name: " + d.data.name + "<br>" + "<table class='tipTable'>";
+          t = t + "Name: " + escapeTipHtml(d.data.name) + "<br>" + "<table class='tipTable'>";
           for (var i = 0; i < nval; i++) {
               t = t + "<tr>";
-              t = t + "<td class='tipDClassification' style='white-space:nowrap;" + "font-size:" + ft_s + "px;font-family:" + ft_f + ";'>" + options.colnames[i] + "</td>";
+              t = t + "<td class='tipDClassification' style='white-space:nowrap;" + "font-size:" + ft_s + "px;font-family:" + ft_f + ";'>" + escapeTipHtml(options.colnames[i]) + "</td>";
               t = t + "<td class='tipDClassification' style='white-space:nowrap;'>";
               t = t + "<div style='width:" + tipBarScale(d.data.tips[i]) + "px;height:8px;background-color:steelblue'></div>" + "</td>";
               t = t + "</tr>";
