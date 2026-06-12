@@ -2,7 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/Displayr/rhtmlDendrogram/badge.svg?branch=master)](https://coveralls.io/github/Displayr/rhtmlDendrogram?branch=master)
 # rhtmlDendrogram
 
-What the Package Does (Title Case)
+R htmlwidget package for creating interactive dendrograms
 
 ## Installation
 
