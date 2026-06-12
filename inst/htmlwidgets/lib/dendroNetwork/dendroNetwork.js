@@ -537,11 +537,11 @@ function DendroNetwork() {
           var ft_f = options.tooltipsFontFamily;
           var t = "";
           var nval = d.data.tips.length;
-          t = t + "<div class='tipTableContainer' style='white-space:nowrap;" + "font-size:" + ft_s + "px;font-family:" + ft_f + ";'>";
+          t = t + "<div class='tipTableContainer' style='white-space:nowrap;" + "font-size:" + ft_s + "px;font-family:" + escapeTipHtml(ft_f) + ";'>";
           t = t + "Name: " + escapeTipHtml(d.data.name) + "<br>" + "<table class='tipTable'>";
           for (var i = 0; i < nval; i++) {
               t = t + "<tr>";
-              t = t + "<td class='tipDClassification' style='white-space:nowrap;" + "font-size:" + ft_s + "px;font-family:" + ft_f + ";'>" + escapeTipHtml(options.colnames[i]) + "</td>";
+              t = t + "<td class='tipDClassification' style='white-space:nowrap;" + "font-size:" + ft_s + "px;font-family:" + escapeTipHtml(ft_f) + ";'>" + escapeTipHtml(options.colnames[i]) + "</td>";
               t = t + "<td class='tipDClassification' style='white-space:nowrap;'>";
               t = t + "<div style='width:" + tipBarScale(d.data.tips[i]) + "px;height:8px;background-color:steelblue'></div>" + "</td>";
               t = t + "</tr>";
